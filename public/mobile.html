@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#100f0d">
+    <title>Wisp</title>
+    <link rel="stylesheet" href="/mobile.css">
+    <link rel="stylesheet" href="/account-settings.css">
+    <script src="/account-settings.js" defer></script>
+    <script type="module" src="/mobile.js"></script>
+  </head>
+  <body>
+    <div id="app" class="app" data-drawer="closed">
+      <aside id="sidebar" class="sidebar" aria-label="Conversations">
+        <div class="sidebar-actions">
+          <button id="new-chat" class="nav-action" type="button">
+            <svg aria-hidden="true" data-icon="square-pen" viewBox="0 0 24 24"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>
+            <span>New Chat</span>
+          </button>
+          <button id="open-artifacts" class="nav-action" type="button">
+            <svg aria-hidden="true" data-icon="layout-grid" viewBox="0 0 24 24"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
+            <span>Artifacts</span>
+          </button>
+          <button id="open-connectors" class="nav-action" type="button">
+            <svg aria-hidden="true" data-icon="cable" viewBox="0 0 24 24"><path d="M17 19a1 1 0 0 1-1-1v-2a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2a1 1 0 0 1-1 1z"/><path d="M17 21v-2"/><path d="M19 14V6.5a1 1 0 0 0-7 0v11a1 1 0 0 1-7 0V10"/><path d="M21 21v-2"/><path d="M3 5V3"/><path d="M4 10a2 2 0 0 1-2-2V6a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2a2 2 0 0 1-2 2z"/><path d="M7 5V3"/></svg>
+            <span>Connectors</span>
+          </button>
+          <button id="open-transcription" class="nav-action" type="button">
+            <svg aria-hidden="true" data-icon="notepad-text" viewBox="0 0 24 24"><path d="M8 2v4"/><path d="M12 2v4"/><path d="M16 2v4"/><rect width="16" height="18" x="4" y="4" rx="2"/><path d="M8 10h6"/><path d="M8 14h8"/><path d="M8 18h5"/></svg>
+            <span>Transcripts</span>
+          </button>
+        </div>
+        <nav id="session-nav" class="session-nav" aria-label="Chat list"></nav>
+        <div class="sidebar-foot"><div class="sidebar-profile"><span id="profile-avatar" class="profile-avatar"><svg aria-hidden="true" data-icon="circle-user" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="10" r="3"/><path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662"/></svg></span><span id="profile-name">Username</span></div><button id="open-account-settings" class="icon-button" type="button" aria-label="Settings"><svg aria-hidden="true" data-icon="settings" viewBox="0 0 24 24"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+      </aside>
+      <button id="scrim" class="scrim" type="button" aria-label="Close conversations"></button>
+
+      <main class="workspace">
+        <header class="topbar">
+          <div class="topbar-leading">
+          <button id="open-sidebar" class="icon-button menu-button" type="button" aria-label="Open conversations" aria-controls="sidebar" aria-expanded="false">
+            <svg aria-hidden="true" data-icon="panel-left" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/></svg>
+          </button>
+          <button id="new-chat-top" class="icon-button" type="button" aria-label="New Chat">
+            <svg aria-hidden="true" data-icon="square-pen" viewBox="0 0 24 24"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/></svg>
+          </button>
+          </div>
+          <button id="rename-chat" class="topbar-title" type="button" aria-label="Rename chat">
+            <span id="chat-title">Wisp</span>
+            <span id="connection" class="connection" role="status">Connecting…</span>
+          </button>
+          <div class="topbar-trailing">
+          <button id="privacy-details" class="icon-button" type="button" aria-label="Privacy" aria-controls="settings-dialog" aria-expanded="false">
+            <svg aria-hidden="true" data-icon="lock" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </button>
+          <button id="toggle-theme" class="icon-button" type="button" aria-label="Switch to light theme">
+            <svg aria-hidden="true" data-icon="sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+          </button>
+          </div>
+        </header>
+
+        <section id="chat" class="chat" aria-label="Chat">
+          <div id="empty" class="empty" hidden>
+            <p id="greeting" class="greeting"></p>
+            <h1>How can I help you today?</h1>
+          </div>
+          <div id="loading" class="loading" role="status"><span class="spinner"></span><span id="loading-label">Connecting to Mac…</span><small id="loading-hint">Your chats will appear here.</small></div>
+          <div id="messages" class="messages"></div>
+        </section>
+
+        <section class="composer-zone" aria-label="Message composer">
+          <button id="jump-bottom" class="jump-bottom" type="button" aria-label="Jump to latest message" hidden><svg aria-hidden="true" data-icon="chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg><span>Latest</span></button>
+          <div id="notice" class="notice" role="status" hidden></div>
+          <form id="composer" class="composer">
+            <div class="input-shell">
+              <button id="attach" class="attach-button" type="button" aria-label="Add attachment" title="Add a file or image" hidden>
+                <svg aria-hidden="true" data-icon="plus" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+              </button>
+              <input id="attachment-input" class="sr-only" type="file" accept="text/*,image/*" multiple tabindex="-1">
+              <label class="sr-only" for="message">Message Wisp</label>
+              <div id="attachment-chips" class="attachment-chips" aria-label="Selected attachments" hidden></div>
+              <textarea id="message" rows="1" maxlength="4000" placeholder="Message Wisp..." enterkeyhint="enter"></textarea>
+              <div class="input-actions">
+                <button id="send" class="send" type="submit" aria-label="Send message">
+                  <svg aria-hidden="true" data-icon="arrow-up" viewBox="0 0 24 24"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>
+                </button>
+                <button id="stop" class="send stop" type="button" aria-label="Stop response" hidden><svg aria-hidden="true" data-icon="square" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"/></svg></button>
+              </div>
+            </div>
+            <div class="composer-bar">
+              <div class="composer-left">
+                <div class="picker-wrap">
+                  <button id="project-button" class="pill" type="button" aria-haspopup="menu" aria-expanded="false" hidden>
+                    <svg aria-hidden="true" data-icon="folder-plus" viewBox="0 0 24 24"><path d="M12 10v6"/><path d="M9 13h6"/><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
+                    <span>Project</span>
+                  </button>
+                  <div id="project-menu" class="popover project-menu" role="menu" hidden></div>
+                </div>
+                <button id="sandbox-status" class="pill status-pill" type="button" aria-label="Sandboxed" aria-pressed="true" hidden><svg aria-hidden="true" data-icon="shield-check" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg><span>Sandboxed</span></button>
+                <span id="context-status" class="context-status" hidden></span>
+              </div>
+              <div class="composer-right">
+                <div class="picker-wrap">
+                  <button id="mode-button" class="pill" type="button" aria-haspopup="menu" aria-expanded="false" hidden><span>Advanced</span><svg aria-hidden="true" data-icon="chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></button>
+                  <div id="mode-menu" class="popover mode-menu" role="menu" hidden></div>
+                </div>
+                <button id="thinking" aria-label="Thinking" title="Thinking" class="pill thinking" type="button" aria-pressed="true" hidden>
+                  <svg aria-hidden="true" data-icon="brain" viewBox="0 0 24 24"><path d="M12 18V5"/><path d="M15 13a4.17 4.17 0 0 1-3-4 4.17 4.17 0 0 1-3 4"/><path d="M17.598 6.5A3 3 0 1 0 12 5a3 3 0 1 0-5.598 1.5"/><path d="M17.997 5.125a4 4 0 0 1 2.526 5.77"/><path d="M18 18a4 4 0 0 0 2-7.464"/><path d="M19.967 17.483A4 4 0 1 1 12 18a4 4 0 1 1-7.967-.517"/><path d="M6 18a4 4 0 0 1-2-7.464"/><path d="M6.003 5.125a4 4 0 0 0-2.526 5.77"/></svg>
+                </button>
+              </div>
+            </div>
+          </form>
+          <footer class="trust"><div class="privacy-guarantees" aria-label="Wisp privacy features"><span><svg aria-hidden="true" data-icon="lock" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Encrypted</span><i aria-hidden="true">|</i><span><svg aria-hidden="true" data-icon="shield-check" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>Never used for training</span><i aria-hidden="true">|</i><span><svg aria-hidden="true" data-icon="shield-check" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>Private Search</span></div><span class="disclaimer">Wisp is AI and can make mistakes. Please double-check responses.</span><span class="disclaimer author-credit">Unofficial · Developed by web3illy</span></footer>
+        </section>
+      </main>
+    </div>
+    <div id="settings-dialog" class="dialog-backdrop privacy-backdrop" hidden>
+      <section class="dialog settings-dialog" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+        <button id="settings-close" class="icon-button privacy-close" type="button" aria-label="Close privacy"><svg aria-hidden="true" data-icon="x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+        <div class="privacy-body">
+          <div class="privacy-intro">
+            <span class="privacy-eyebrow">Private by design</span>
+            <h2 id="settings-title">Privacy in Wisp</h2>
+            <p>Wisp describes the protections below for its model requests. Remote displays the verification reported by Wisp on your Mac.</p>
+          </div>
+          <section class="privacy-section">
+            <h3 class="privacy-flows-label">How your data flows</h3>
+            <div class="privacy-card">
+              <div id="privacy-flow" class="privacy-flow" aria-label="How Wisp handles a request"><div class="flow-row"><span class="flow-symbol"><svg aria-hidden="true" data-icon="user" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span><div><strong>You</strong><p>Chat, files, and prompts on your device</p></div><small class="local">LOCAL</small></div>
+<div class="flow-row"><span class="flow-symbol"><svg aria-hidden="true" data-icon="briefcase" viewBox="0 0 24 24"><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/><rect width="20" height="14" x="2" y="6" rx="2"/></svg></span><div><strong>Wisp Agent</strong><p>Runs on your machine. AES-256 encrypted storage.</p></div><small class="local">LOCAL</small></div>
+<div class="flow-row"><span class="flow-symbol"><svg aria-hidden="true" data-icon="shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg></span><div><strong>Anonymizing Proxy</strong><p>Hardware enclave (TEE). No request logs, according to Wisp.</p></div><small class="tee">TEE</small></div>
+<div class="flow-row"><span class="flow-symbol"><svg aria-hidden="true" data-icon="server" viewBox="0 0 24 24"><rect width="20" height="8" x="2" y="2" rx="2" ry="2"/><rect width="20" height="8" x="2" y="14" rx="2" ry="2"/><line x1="6" x2="6.01" y1="6" y2="6"/><line x1="6" x2="6.01" y1="18" y2="18"/></svg></span><div><strong>LLM Provider</strong><p>Receives prompt without your identity attached</p></div><small class="tee">TEE</small></div></div>
+              <hr class="privacy-divider">
+              <p class="flow-caption">According to Wisp, its proxy removes account identity before forwarding a request. Information you include in a prompt can still identify you.</p>
+            </div>
+          </section>
+          <section class="privacy-section attestation-section">
+            <h3 class="privacy-section-label">Live Cryptographic Attestation</h3>
+            <p class="privacy-section-intro">Wisp checks a signed enclave attestation against its expected build. The results below come from Wisp; Remote does not independently verify the enclave.</p>
+            <div class="privacy-card">
+              <div id="privacy-verdict" class="privacy-verdict" role="status">Waiting for verification from Wisp…</div>
+              <details id="privacy-measurements" hidden>
+                <summary class="attestation-summary"><svg aria-hidden="true" data-icon="check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg><span>Verified by Wisp — measurements match its expected build</span><svg aria-hidden="true" data-icon="chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></summary>
+                <div class="privacy-measurements-content"><h4>Verified measurements</h4><div id="privacy-fields"></div></div>
+              </details>
+              <div id="privacy-failures" hidden></div>
+              <button id="privacy-refresh" class="attestation-retry" type="button" hidden><svg aria-hidden="true" data-icon="refresh-cw" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg><span>Retry verification</span></button>
+              <hr class="privacy-divider">
+              <details class="privacy-learn"><summary>Learn more about how attestation works</summary><p>Wisp describes an Intel TDX enclave on Phala that provides a signed attestation. Wisp checks its deployment measurements, including the compose hash and container image digest, against the build it expects. Remote relays the status and measurements from Wisp on your Mac. This is separate from the encrypted iPhone–Mac connection and is not an independent security audit by Remote.</p></details>
+            </div>
+          </section>
+          <section class="privacy-section remote-privacy-section">
+            <h3 class="privacy-section-label">iPhone ↔ Mac</h3>
+            <div class="privacy-card">
+              <p id="settings-connection">Connecting to your Mac…</p>
+              <p>Wisp Remote is an unofficial, third-party companion. Paired devices use end-to-end encryption; relays can still see connection metadata. The Wisp protections above are separate from this remote connection.</p>
+              <button id="manage-connection" class="attestation-link" type="button" hidden>Manage connection</button>
+              <button id="retry-connection" class="attestation-link" type="button" hidden>Reconnect</button>
+            </div>
+          </section>
+        </div>
+      </section>
+    </div>
+    <div id="account-settings-dialog" hidden></div>
+    <div id="feature-dialog" class="dialog-backdrop" hidden>
+      <section class="dialog feature-dialog" role="dialog" aria-modal="true" aria-labelledby="feature-title">
+        <header class="dialog-heading"><h2 id="feature-title"></h2><button id="feature-close" class="icon-button" type="button" aria-label="Close feature"><svg aria-hidden="true" data-icon="x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></header>
+        <p id="feature-copy" role="status"></p>
+      </section>
+    </div>
+    <div id="sidebar-context-menu" class="popover sidebar-context-menu" role="menu" aria-label="Actions" hidden></div>
+    <div id="remove-project-dialog" class="dialog-backdrop centered-dialog" hidden>
+      <section class="dialog removal-dialog" role="alertdialog" aria-modal="true" aria-labelledby="remove-project-title" aria-describedby="remove-project-copy">
+        <header class="removal-heading"><h2 id="remove-project-title"></h2><button id="remove-project-close" type="button" aria-label="Close removal confirmation"><svg aria-hidden="true" data-icon="x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></header>
+        <p id="remove-project-copy"></p>
+        <div id="remove-project-error" class="dialog-error" role="alert" hidden></div>
+        <div class="dialog-actions">
+          <button id="remove-project-cancel" class="confirm-button" type="button">Cancel</button>
+          <button id="remove-project-confirm" class="confirm-button danger" type="button">Remove from Wisp</button>
+        </div>
+      </section>
+    </div>
+    <div id="remove-session-dialog" class="dialog-backdrop centered-dialog" hidden>
+      <section class="dialog removal-dialog" role="alertdialog" aria-modal="true" aria-labelledby="remove-session-title" aria-describedby="remove-session-copy">
+        <header class="removal-heading"><h2 id="remove-session-title"></h2><button id="remove-session-close" type="button" aria-label="Close removal confirmation"><svg aria-hidden="true" data-icon="x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></header>
+        <p id="remove-session-copy"></p>
+        <div id="remove-session-error" class="dialog-error" role="alert" hidden></div>
+        <div class="dialog-actions">
+          <button id="remove-session-cancel" class="confirm-button" type="button">Cancel</button>
+          <button id="remove-session-confirm" class="confirm-button danger" type="button">Delete conversation</button>
+        </div>
+      </section>
+    </div>
+    <div id="project-dialog" class="dialog-backdrop" hidden>
+      <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="project-dialog-title">
+        <h2 id="project-dialog-title">New Project</h2>
+        <p>Create a private Wisp project and start its first chat.</p>
+        <form id="project-form">
+          <label for="project-name">Project name</label>
+          <input id="project-name" name="name" type="text" maxlength="64" autocomplete="off" required>
+          <div id="project-error" class="dialog-error" role="alert" hidden></div>
+          <div class="dialog-actions">
+            <button id="project-cancel" class="confirm-button" type="button">Cancel</button>
+            <button id="project-create" class="confirm-button primary" type="submit">Create Project</button>
+          </div>
+        </form>
+      </section>
+    </div>
+    <div id="rename-dialog" class="dialog-backdrop" hidden>
+      <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="rename-dialog-title">
+        <h2 id="rename-dialog-title">Rename Chat</h2>
+        <form id="rename-form">
+          <label for="rename-title">Chat title</label>
+          <input id="rename-title" name="title" type="text" maxlength="120" autocomplete="off" required>
+          <div id="rename-error" class="dialog-error" role="alert" hidden></div>
+          <div class="dialog-actions">
+            <button id="rename-cancel" class="confirm-button" type="button">Cancel</button>
+            <button id="rename-save" class="confirm-button primary" type="submit">Save</button>
+          </div>
+        </form>
+      </section>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; script-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'">
+  <title>Wisp Remote</title>
+  <link rel="stylesheet" href="./menu.css">
+  <script src="./menu.js" defer></script>
+</head>
+<body>
+  <main id="panel" class="panel" aria-labelledby="app-title">
+    <header id="header" class="header">
+      <img id="mascot" class="mascot" src="./wisp-assets/remote-ghost-offline.svg" alt="">
+      <div class="heading">
+        <h1 id="app-title">Wisp Remote</h1>
+        <p class="byline">Unofficial <span aria-hidden="true">·</span> by <a id="github-link" href="https://github.com/web3illy/unofficial-wisp-remote">web3illy</a></p>
+      </div>
+      <button id="quit" class="quit-button" type="button" title="Quit Wisp Remote" aria-label="Quit Wisp Remote"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8v8.4"/><path d="M6.2 6.3a8 8 0 1 0 11.6 0"/></svg></button>
+    </header>
+
+    <section id="error-card" class="notice error-card" role="alert" hidden><p id="error-message"></p><button id="retry" class="text-button" type="button">Try again</button></section>
+
+    <div id="home" class="home">
+      <div class="service-row" role="group" aria-label="iPhone and Wisp status">
+        <div id="status" class="service-status phone-status" role="status" aria-live="polite">
+          <span class="dot" aria-hidden="true"></span><span id="status-text" class="service-label">Starting…</span>
+        </div>
+        <div id="wisp-card" class="service-status wisp-status" role="group" aria-label="Wisp status">
+          <span id="wisp-dot" class="dot" aria-hidden="true"></span><span id="wisp-title" class="service-label" role="status" aria-live="polite">Checking Wisp…</span>
+          <button id="wisp-action" class="text-button" type="button" hidden></button>
+        </div>
+      </div>
+      <button id="invite" class="primary-button" type="button">Connect iPhone</button>
+      <button id="manage" class="menu-row" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M10.5 18.5h3"/></svg><span>Devices</span><span id="device-summary" class="row-detail">0</span><span class="chevron" aria-hidden="true">›</span></button>
+    </div>
+
+    <section id="pairing" class="pairing" hidden>
+      <div id="pending-card" hidden>
+        <h2>Allow this iPhone?</h2><p id="pending-name" class="phone-name"></p>
+        <p class="hint">Compare this code on your iPhone.</p>
+        <strong id="pending-code" class="identity-code"></strong>
+        <p class="hint">Allows access to your Wisp chats.<br>Wisp action approvals stay unchanged.</p>
+        <p id="pending-countdown" class="countdown"></p>
+        <div class="button-row"><button id="reject" class="secondary-button" type="button">Deny</button><button id="approve" class="primary-button" type="button">Allow</button></div>
+      </div>
+      <div id="invite-loading" class="loading" role="status" hidden><span class="spinner" aria-hidden="true"></span>Preparing QR code…</div>
+      <div id="invite-card" hidden>
+        <h2 class="scan-instruction">Scan with your iPhone using Wisp Remote</h2>
+        <div class="qr-frame"><img id="qr" alt="QR code for connecting Wisp Remote"><div id="qr-expired" class="qr-expired" hidden><strong>QR code expired</strong><span>Create a new code.</span></div></div>
+        <div id="mac-code-row" class="mac-code-row"><span>Mac code</span><strong id="mac-code"></strong></div>
+        <p id="invite-countdown" class="countdown"></p>
+        <button id="regenerate" class="primary-button full-button" type="button" hidden>New QR code</button>
+      </div>
+      <div id="pairing-idle" class="pairing-idle" hidden><h2 id="pairing-result">Connect an iPhone</h2><button id="pair-again" class="primary-button" type="button">New QR code</button></div>
+    </section>
+
+    <section id="devices" class="devices" hidden>
+      <div class="section-heading"><h2>Devices</h2><span id="device-count"></span></div>
+      <p id="devices-empty" class="hint" hidden>No linked devices.</p>
+      <div id="device-list" class="device-list"></div>
+      <div id="pagination" class="pagination" hidden><button id="previous-page" class="text-button" type="button">Previous</button><span id="page-count"></span><button id="next-page" class="text-button" type="button">Next</button></div>
+      <button id="add-device" class="secondary-button full-button" type="button">Add iPhone</button>
+    </section>
+
+    <footer id="footer" class="footer"><span class="privacy" title="Relays can see connection metadata."><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3.5" y="7" width="9" height="7" rx="1.5"/><path d="M5.5 7V4a2.5 2.5 0 0 1 5 0v3"/></svg>End-to-end encrypted</span></footer>
+  </main>
+</body>
+</html>

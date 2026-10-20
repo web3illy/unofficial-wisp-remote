@@ -1,0 +1,4 @@
+// Public defaults. Each source builder may override these in the ignored
+// native/LocalSigning.xcconfig file or with xcodebuild arguments.
+PRODUCT_BUNDLE_IDENTIFIER = com.example.wisp-remote
+#include? "../LocalSigning.xcconfig"

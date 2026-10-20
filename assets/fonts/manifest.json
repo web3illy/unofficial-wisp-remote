@@ -1,0 +1,85 @@
+{
+  "fonts": [
+    {
+      "file": "CormorantGaramond-SemiboldItalic-latin.woff2",
+      "sha256": "938e91d95067a818a244f5ee6567cbdc13bb6c3c3b7de160b3e90fd8daf8afe5",
+      "source": "https://fonts.gstatic.com/s/cormorantgaramond/v21/co3smX5slCNuHLi8bLeY9MK7whWMhyjYrGFEsdtdc62E6zd5LDf-iNM8A_6pUKz9.woff2",
+      "license": "licenses/CormorantGaramond-OFL-1.1.txt",
+      "family": "Cormorant Garamond",
+      "style": "italic",
+      "weight": "600"
+    },
+    {
+      "file": "NotoSans-Variable-cyrillic.woff2",
+      "sha256": "70af9f676b2ab2b28a248ec79b498762cc981ec6d52d6a6dc8b42a3ba5c05f50",
+      "source": "https://fonts.gstatic.com/s/notosans/v42/o-0bIpQlx3QUlC5A4PNB6Ryti20_6n1iPHjc5ardu3mhPy1Fig.woff2",
+      "license": "licenses/NotoSans-OFL-1.1.txt",
+      "family": "Noto Sans",
+      "style": "normal",
+      "weight": "100 900"
+    },
+    {
+      "file": "NotoSans-Variable-cyrillic-ext.woff2",
+      "sha256": "b01aece68a50d45fe0502697b9c927c0c6fac49b4c02587708699675cf263742",
+      "source": "https://fonts.gstatic.com/s/notosans/v42/o-0bIpQlx3QUlC5A4PNB6Ryti20_6n1iPHjc5aPdu3mhPy1Fig.woff2",
+      "license": "licenses/NotoSans-OFL-1.1.txt",
+      "family": "Noto Sans",
+      "style": "normal",
+      "weight": "100 900"
+    },
+    {
+      "file": "NotoSans-Variable-latin.woff2",
+      "sha256": "afc7a910f4ff04ee2ff7b3a2ef8b24f8340b8ea8d8125f2779f1f0b69d1b56b9",
+      "source": "https://fonts.gstatic.com/s/notosans/v42/o-0bIpQlx3QUlC5A4PNB6Ryti20_6n1iPHjc5a7du3mhPy0.woff2",
+      "license": "licenses/NotoSans-OFL-1.1.txt",
+      "family": "Noto Sans",
+      "style": "normal",
+      "weight": "100 900"
+    },
+    {
+      "file": "NotoSans-Variable-latin-ext.woff2",
+      "sha256": "be4f6d04a074f3887553c9b1c09e563470f3fe975456a13fc5bf7e20b5612976",
+      "source": "https://fonts.gstatic.com/s/notosans/v42/o-0bIpQlx3QUlC5A4PNB6Ryti20_6n1iPHjc5aDdu3mhPy1Fig.woff2",
+      "license": "licenses/NotoSans-OFL-1.1.txt",
+      "family": "Noto Sans",
+      "style": "normal",
+      "weight": "100 900"
+    },
+    {
+      "file": "NotoSans-VariableItalic-cyrillic.woff2",
+      "sha256": "2ed94cff72a692bcfe3efe332add0d90447118307dea7f5d96c34e037d1a40eb",
+      "source": "https://fonts.gstatic.com/s/notosans/v42/o-0ZIpQlx3QUlC5A4PNr4C5OaxRsfNNlKbCePevtvXOmHS91ixg0.woff2",
+      "license": "licenses/NotoSans-OFL-1.1.txt",
+      "family": "Noto Sans",
+      "style": "italic",
+      "weight": "100 900"
+    },
+    {
+      "file": "NotoSans-VariableItalic-cyrillic-ext.woff2",
+      "sha256": "cb72040e2522bc4c2e666089937fe8199cdc4841d62f64fa3b6b9aac2c1dca46",
+      "source": "https://fonts.gstatic.com/s/notosans/v42/o-0ZIpQlx3QUlC5A4PNr4C5OaxRsfNNlKbCePevttHOmHS91ixg0.woff2",
+      "license": "licenses/NotoSans-OFL-1.1.txt",
+      "family": "Noto Sans",
+      "style": "italic",
+      "weight": "100 900"
+    },
+    {
+      "file": "NotoSans-VariableItalic-latin.woff2",
+      "sha256": "fc468dfc2ef6b34e9893188f0cd0999985c22b95d977ae84d60d39741de6e73f",
+      "source": "https://fonts.gstatic.com/s/notosans/v42/o-0ZIpQlx3QUlC5A4PNr4C5OaxRsfNNlKbCePevtuXOmHS91iw.woff2",
+      "license": "licenses/NotoSans-OFL-1.1.txt",
+      "family": "Noto Sans",
+      "style": "italic",
+      "weight": "100 900"
+    },
+    {
+      "file": "NotoSans-VariableItalic-latin-ext.woff2",
+      "sha256": "5951bfbd34996269787a8f1f2419bca2ca4380662d4fd492efc76c0cd6c3862f",
+      "source": "https://fonts.gstatic.com/s/notosans/v42/o-0ZIpQlx3QUlC5A4PNr4C5OaxRsfNNlKbCePevtt3OmHS91ixg0.woff2",
+      "license": "licenses/NotoSans-OFL-1.1.txt",
+      "family": "Noto Sans",
+      "style": "italic",
+      "weight": "100 900"
+    }
+  ]
+}

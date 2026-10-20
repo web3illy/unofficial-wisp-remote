@@ -1,0 +1,44 @@
+{
+  "name": "unofficial-wisp-remote",
+  "version": "0.4.1",
+  "private": true,
+  "type": "module",
+  "description": "Unofficial iPhone companion for Wisp on Mac, connected over encrypted iroh transport",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "start": "open \"$HOME/Applications/Wisp Remote.app\"",
+    "test": "node --test tests/account-settings.test.js tests/mobile-ui.test.js tests/mobile-bridge.test.js tests/mobile-ip-adapter.test.js tests/attachments.test.js tests/pairing.test.js tests/companion-rpc.test.js tests/iroh-companion.test.js tests/mac-menu-ui.test.js tests/install.test.js tests/ios-install.test.js",
+    "check": "node scripts/check.mjs",
+    "start:bridge": "node src/mobile-server.js",
+    "start:legacy": "node src/start-mobile.js",
+    "assets": "node scripts/prepare-assets.mjs",
+    "build:mac": "node scripts/install-mac.mjs",
+    "install:mac": "node scripts/install-mac.mjs --install",
+    "build:ios": "node scripts/build-ios.mjs",
+    "test:mobile": "node --test tests/account-settings.test.js tests/mobile-ui.test.js tests/mobile-bridge.test.js tests/mobile-ip-adapter.test.js tests/attachments.test.js",
+    "verify:native": "node scripts/verify-native-transport.mjs",
+    "verify:wisp": "node scripts/verify-wisp-attachment.mjs",
+    "test:mac-menu": "node scripts/test-mac-menu.mjs",
+    "preview:mobile": "node scripts/preview-mobile.mjs",
+    "audit:public": "node scripts/audit-public-source.mjs",
+    "doctor": "node scripts/doctor.mjs",
+    "install:ios": "node scripts/install-ios.mjs",
+    "build:portable": "node scripts/install-mac.mjs --portable",
+    "test:install": "node --test tests/install.test.js tests/ios-install.test.js",
+    "package:source": "node scripts/package-source.mjs"
+  },
+  "dependencies": {
+    "@number0/iroh": "1.1.0"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/web3illy/unofficial-wisp-remote.git"
+  },
+  "homepage": "https://github.com/web3illy/unofficial-wisp-remote#readme",
+  "bugs": {
+    "url": "https://github.com/web3illy/unofficial-wisp-remote/issues"
+  }
+}
