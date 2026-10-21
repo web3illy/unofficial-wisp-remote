@@ -61,7 +61,7 @@ async function main() {
     await writeFile(path, portableCSS(await readFile(path, 'utf8')));
   }
   await writeFile(join(contents, 'Info.plist'), `<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd"><plist version="1.0"><dict>
-<key>CFBundleIdentifier</key><string>local.wisp-remote.${preview ? 'preview' : 'companion'}</string><key>CFBundleName</key><string>${appName}</string><key>CFBundleExecutable</key><string>WispRemoteMenu</string><key>CFBundlePackageType</key><string>APPL</string><key>CFBundleVersion</key><string>18</string><key>CFBundleShortVersionString</key><string>0.4.1</string><key>CFBundleIconFile</key><string>Remote</string><key>LSUIElement</key><true/><key>LSMinimumSystemVersion</key><string>14.5</string><key>WispNodePath</key><string>${xml(process.execPath)}</string></dict></plist>`);
+<key>CFBundleIdentifier</key><string>local.wisp-remote.${preview ? 'preview' : 'companion'}</string><key>CFBundleName</key><string>${appName}</string><key>CFBundleExecutable</key><string>WispRemoteMenu</string><key>CFBundlePackageType</key><string>APPL</string><key>CFBundleVersion</key><string>19</string><key>CFBundleShortVersionString</key><string>0.4.2</string><key>CFBundleIconFile</key><string>Remote</string><key>LSUIElement</key><true/><key>LSMinimumSystemVersion</key><string>14.5</string><key>WispNodePath</key><string>${xml(process.execPath)}</string></dict></plist>`);
   run('/usr/bin/codesign', ['--force', '--sign', '-', build]);
   run('/usr/bin/codesign', ['--verify', '--strict', build]);
   if (process.argv.includes('--install')) {

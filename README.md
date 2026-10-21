@@ -13,7 +13,7 @@ not an official Wisp app.
 
 - Opens the same chats and projects you use on the Mac.
 - Streams replies and tool activity; lets you approve, deny or stop supported actions.
-- Sends text, images and text extracted from PDFs.
+- Sends text, images and text extracted from PDFs. Add files with **+** or drag them from Files into the iPhone chat.
 - Supports model selection, Thinking, Usage and Wisp's Mac-wide Sandbox controls.
 - Pairs by QR code with approval on the Mac, then reconnects over an encrypted connection.
 

@@ -512,50 +512,127 @@ async function prepareBrowserFile(file) {
   return { prepared: { kind: "file", filename: file.name, size: bytes.length, ...(file.type ? { mimeType: file.type } : {}) }, bytes };
 }
 
-async function addPreparedFiles(files) {
-  if (!Array.isArray(files) || !files.length || state.uploading) return;
+function decodePreparedFile(value) {
+  const bytes = base64Bytes(value.dataBase64);
+  const prepared = { ...value }; delete prepared.dataBase64;
+  return { prepared, bytes };
+}
+
+function canAddAttachments() {
+  return uiReady() && Boolean(state.bootstrap?.capabilities?.attachments) &&
+    Boolean(state.selectedId || state.draftActive) && !state.loading && !runIsActive() &&
+    !state.working && !state.uploading && !state.pendingUnknown && !state.creationUnknown && state.attachments.length < 10;
+}
+
+async function addAttachmentFiles(loadFiles, prepare) {
+  if (!canAddAttachments()) return;
+  const selectionId = state.selectedId || state.draftId;
+  const stillSelected = () => selectionId === (state.selectedId || state.draftId);
   state.uploading = true; updateControls(); setNotice("Preparing attachment…");
   try {
-    for (const value of files.slice(0, 10 - state.attachments.length)) {
-      const bytes = base64Bytes(value.dataBase64);
-      const prepared = { ...value }; delete prepared.dataBase64;
+    const files = typeof loadFiles === "function" ? await loadFiles() : loadFiles;
+    if (!stillSelected()) return;
+    if (!files?.length) { setNotice(""); return; }
+    if (files.length + state.attachments.length > 10) throw new Error("You can add up to 10 attachments.");
+    // Validate the whole batch before uploading or appending any of its files.
+    const batch = [];
+    let total = state.attachments.reduce((sum, item) => sum + (item.size || 0), 0);
+    for (const file of files) {
+      const item = await prepare(file);
+      if (!stillSelected()) return;
+      if (!(item.bytes instanceof Uint8Array) || item.bytes.length < 1 || item.bytes.length > 5 * 1024 * 1024 || item.prepared.size !== item.bytes.length) throw new Error("Each attachment must be smaller than 5 MB.");
+      total += item.bytes.length;
+      if (total > 15 * 1024 * 1024) throw new Error("Attachments must be smaller than 15 MB in total.");
+      batch.push(item);
+    }
+    for (const { prepared, bytes } of batch) {
+      if (!stillSelected()) return;
       await uploadPrepared(prepared, bytes);
       renderAttachmentChips();
     }
     setNotice("");
-  } catch (error) { setNotice(error.message || "The attachment could not be added.", true); }
+  } catch (error) { if (stillSelected()) setNotice(error.message || "The attachment could not be added.", true); }
   finally { state.uploading = false; updateControls(); }
 }
 
 async function chooseAttachments(event) {
-  if ((!state.selectedId && !state.draftActive) || state.uploading || state.attachments.length >= 10) return;
+  if (!canAddAttachments()) return;
   feedbackFor(event)("light");
   const selectionId = state.selectedId || state.draftId;
   const native = window.webkit?.messageHandlers?.wisp;
   if (native) {
-    try {
+    await addAttachmentFiles(async () => {
       const result = await native.postMessage({ kind: "pickFiles", sessionId: selectionId });
       if (!result?.ok) throw new Error(result?.error?.message || "The iPhone file picker could not open.");
-      if (selectionId !== (state.selectedId || state.draftId)) return;
-      if (result.body?.files) await addPreparedFiles(result.body.files);
-    } catch (error) { setNotice(error.message || "The iPhone file picker could not open.", true); }
+      return result.body?.files || [];
+    }, decodePreparedFile);
     return;
   }
   attachmentInput.click();
 }
 
-async function addBrowserFiles(files) {
-  if (!files.length || state.uploading) return;
-  state.uploading = true; updateControls(); setNotice("Preparing attachment…");
-  try {
-    for (const file of [...files].slice(0, 10 - state.attachments.length)) {
-      const { prepared, bytes } = await prepareBrowserFile(file);
-      await uploadPrepared(prepared, bytes);
-      renderAttachmentChips();
+// Native file drops bypass WebKit's File URLs, which can be unreadable when
+// this page is served by the private wisp-local scheme. Only an opaque batch ID
+// crosses into JS; iOS loads and prepares the actual NSItemProvider files.
+window.wispImportDrop = async (id, selectionId) => {
+  if (!allowFileDrop() || selectionId !== (state.selectedId || state.draftId)) return;
+  await addAttachmentFiles(async () => {
+    const result = await window.webkit.messageHandlers.wisp.postMessage({ kind: "takeDroppedFiles", id });
+    if (!result?.ok) {
+      if (result?.error?.code === "attachment_limit") throw new Error("Attachments exceed the limit: 10 files, 5 MB each, 15 MB in total.");
+      throw new Error("This file could not be attached. Use a downloaded, readable PDF, image or UTF-8 text file.");
     }
-    setNotice("");
-  } catch (error) { setNotice(error.message || "The attachment could not be added.", true); }
-  finally { attachmentInput.value = ""; state.uploading = false; updateControls(); }
+    return result.body?.files || [];
+  }, decodePreparedFile);
+};
+
+let lastDropAvailability = null;
+function reportDropAvailability() {
+  const native = window.webkit?.messageHandlers?.wisp;
+  if (!native || !window.wispNativeFileDrop) return;
+  const selectionId = state.selectedId || state.draftId || null;
+  const enabled = allowFileDrop();
+  const key = `${enabled}:${selectionId}`;
+  if (key === lastDropAvailability) return;
+  lastDropAvailability = key;
+  void native.postMessage({ kind: "fileDropState", enabled, selectionId }).catch(() => {});
+}
+
+async function addBrowserFiles(files) {
+  try { await addAttachmentFiles([...files], prepareBrowserFile); }
+  finally { attachmentInput.value = ""; }
+}
+
+function isFileDrag(event) {
+  return Array.from(event.dataTransfer?.types || []).includes("Files") ||
+    Array.from(event.dataTransfer?.items || []).some(item => item.kind === "file");
+}
+
+function allowFileDrop() {
+  return canAddAttachments() && app.dataset.drawer !== "open" &&
+    [projectDialog, renameDialog, $("#remove-project-dialog"), $("#remove-session-dialog"), $("#settings-dialog"), $("#account-settings-dialog"), $("#feature-dialog")].every(element => element.hidden);
+}
+
+function handleFileDrag(event) {
+  if (!isFileDrag(event)) return;
+  event.preventDefault(); // Prevent WebKit navigation or inserting a file into the textarea.
+  const allowed = allowFileDrop();
+  event.dataTransfer.dropEffect = allowed ? "copy" : "none";
+  $("#composer").classList.toggle("file-drop-active", allowed);
+}
+
+async function handleFileDrop(event) {
+  if (!isFileDrag(event)) return;
+  event.preventDefault();
+  $("#composer").classList.remove("file-drop-active");
+  // DataTransfer is readable only during this event. Keep File objects before awaiting.
+  const files = Array.from(event.dataTransfer.files || []);
+  if (!allowFileDrop()) return;
+  if (!files.length || Array.from(event.dataTransfer.items || []).some(item => item.webkitGetAsEntry?.()?.isDirectory)) {
+    setNotice("Drop individual files, not folders. Download cloud files in Files first.", true); return;
+  }
+  feedbackFor(event)("light");
+  await addBrowserFiles(files);
 }
 
 async function removeAttachment(id, event) {
@@ -1536,7 +1613,9 @@ function updateControls() {
   thinkingButton.disabled = active || state.working || state.pendingUnknown;
   projectButton.disabled = active || state.working || state.pendingUnknown;
   attachButton.hidden = !state.bootstrap?.capabilities?.attachments;
-  attachButton.disabled = !connected || (!state.selectedId && !state.draftActive) || active || state.working || state.uploading || state.pendingUnknown || state.attachments.length >= 10;
+  attachButton.disabled = !canAddAttachments();
+  if (attachButton.disabled) $("#composer").classList.remove("file-drop-active");
+  reportDropAvailability();
   for (const id of ["#new-chat", "#new-chat-top"]) $(id).disabled = !connected || state.draftActive || state.working || state.uploading;
   $("#rename-chat").disabled = !state.selectedId || state.working;
 }
@@ -1970,6 +2049,13 @@ sendButton.addEventListener("pointerdown", event => {
 stopButton.addEventListener("click", cancelRun);
 attachButton.addEventListener("click", chooseAttachments);
 attachmentInput.addEventListener("change", () => { void addBrowserFiles(attachmentInput.files); });
+document.addEventListener("dragenter", handleFileDrag);
+document.addEventListener("dragover", handleFileDrag);
+document.addEventListener("drop", handleFileDrop);
+document.addEventListener("dragleave", event => {
+  if (!event.relatedTarget) $("#composer").classList.remove("file-drop-active");
+});
+document.addEventListener("dragend", () => $("#composer").classList.remove("file-drop-active"));
 modeButton.addEventListener("click", event => toggleMenu("mode", event));
 projectButton.addEventListener("click", event => toggleMenu("project", event));
 thinkingButton.addEventListener("click", event => { if (thinkingButton.disabled) return; feedbackFor(event)("selection"); state.settings.thinking = !state.settings.thinking; rememberSettings(); renderComposerOptions(); });
@@ -2086,6 +2172,7 @@ function syncOverlayAccess() {
   $(".workspace").inert = false;
   chat.inert = Boolean(narrow && app.dataset.drawer === "open");
   $(".composer-zone").inert = Boolean(narrow && app.dataset.drawer === "open");
+  reportDropAvailability();
 }
 
 function openSettings(event) {

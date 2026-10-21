@@ -15,6 +15,7 @@
 		100000000000000000000006 /* WispRemote/Web in Resources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000007 /* WispRemote/Web */; };
 		100000000000000000000007 /* RemoteCore in Frameworks */ = {isa = PBXBuildFile; productRef = 900000000000000000000002 /* RemoteCore */; };
 		100000000000000000000008 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000009 /* Assets.xcassets */; };
+		100000000000000000000009 /* DroppedFileBatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000011 /* DroppedFileBatch.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -28,6 +29,7 @@
 		200000000000000000000008 /* WispRemote.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WispRemote.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		200000000000000000000009 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = WispRemote/Assets.xcassets; sourceTree = SOURCE_ROOT; };
 		200000000000000000000010 /* Signing.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Signing.xcconfig; sourceTree = "<group>"; };
+		200000000000000000000011 /* DroppedFileBatch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DroppedFileBatch.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -61,6 +63,7 @@
 				200000000000000000000003 /* QRScannerView.swift */,
 				200000000000000000000004 /* RemoteWebView.swift */,
 				200000000000000000000005 /* AttachmentPreparer.swift */,
+				200000000000000000000011 /* DroppedFileBatch.swift */,
 				200000000000000000000006 /* Info.plist */,
 			);
 			path = App;
@@ -163,6 +166,7 @@
 				100000000000000000000003 /* QRScannerView.swift in Sources */,
 				100000000000000000000004 /* RemoteWebView.swift in Sources */,
 				100000000000000000000005 /* AttachmentPreparer.swift in Sources */,
+				100000000000000000000009 /* DroppedFileBatch.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -192,11 +196,11 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 14;
+				CURRENT_PROJECT_VERSION = 17;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = App/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.5;
-				MARKETING_VERSION = 0.4.1;
+				MARKETING_VERSION = 0.4.2;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -211,11 +215,11 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 14;
+				CURRENT_PROJECT_VERSION = 17;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = App/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.5;
-				MARKETING_VERSION = 0.4.1;
+				MARKETING_VERSION = 0.4.2;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";

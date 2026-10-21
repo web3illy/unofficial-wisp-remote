@@ -27,6 +27,16 @@ remote page.
 
 The lower-level Swift commands below run from the `native/` directory:
 
+`swift test --filter AttachmentPreparerTests` runs synthetic PDF, image and text
+import regressions on macOS, including malformed input and size limits. These
+tests exercise the same preparation source compiled into the iPhone app.
+`node --test tests/mobile-ui.test.js` from the repository root covers drop events,
+draft isolation, upload routes and failure recovery. For a physical-device check,
+drag a downloaded PDF from Files into a connected chat: its attachment chip should
+appear without sending a message. Repeat during a busy/disconnected state; a drop
+must not navigate away or attach to another chat. Browser preview supports dropped
+text/images; PDF text extraction requires the native app.
+
 ```sh
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test --disable-sandbox
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild \
