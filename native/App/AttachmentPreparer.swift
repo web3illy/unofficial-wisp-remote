@@ -53,13 +53,29 @@ enum AttachmentPreparer {
         let name = try safeFilename(url.lastPathComponent)
         let type = (try? url.resourceValues(forKeys: [.contentTypeKey]).contentType)
             ?? UTType(filenameExtension: url.pathExtension)
-        if type?.conforms(to: .pdf) == true { return try preparePDF(url, name: name) }
-        if type?.conforms(to: .image) == true { return try prepareImage(url, name: name) }
-        return try prepareText(url, name: name, mimeType: type?.preferredMIMEType)
+        let maximum = type?.conforms(to: .pdf) == true || type?.conforms(to: .image) == true
+            ? maximumSourceBytes : maximumFileBytes
+        return try prepareData(readBoundedFile(url, maximum: maximum), name: name, type: type)
     }
 
-    private static func preparePDF(_ url: URL, name: String) throws -> PreparedFile {
-        let sourceData = try readBoundedFile(url, maximum: maximumSourceBytes)
+    // NSItemProvider's temporary URL is valid only inside its callback.
+    // Read and prepare it before returning; never retain a provider URL.
+    static func prepareDroppedFile(_ url: URL, filename: String?, type: UTType) throws -> PreparedFile {
+        let accessed = url.startAccessingSecurityScopedResource()
+        defer { if accessed { url.stopAccessingSecurityScopedResource() } }
+        let name = try safeFilename(filename ?? url.lastPathComponent)
+        let maximum = type.conforms(to: .pdf) || type.conforms(to: .image) ? maximumSourceBytes : maximumFileBytes
+        return try prepareData(readBoundedFile(url, maximum: maximum), name: name, type: type)
+    }
+
+    private static func prepareData(_ data: Data, name: String, type: UTType?) throws -> PreparedFile {
+        if type?.conforms(to: .pdf) == true { return try preparePDF(data, name: name) }
+        if type?.conforms(to: .image) == true { return try prepareImage(data, name: name) }
+        guard data.count <= maximumFileBytes else { throw AttachmentError.limit }
+        return try prepareText(data, name: name, mimeType: type?.preferredMIMEType)
+    }
+
+    private static func preparePDF(_ sourceData: Data, name: String) throws -> PreparedFile {
         guard let document = PDFDocument(data: sourceData),
               !document.isEncrypted, !document.isLocked,
               let text = document.string,
@@ -71,8 +87,7 @@ enum AttachmentPreparer {
                             size: data.count, mimeType: "text/plain", width: nil, height: nil)
     }
 
-    private static func prepareImage(_ url: URL, name: String) throws -> PreparedFile {
-        let sourceData = try readBoundedFile(url, maximum: maximumSourceBytes)
+    private static func prepareImage(_ sourceData: Data, name: String) throws -> PreparedFile {
         guard let source = CGImageSourceCreateWithData(sourceData as CFData, nil),
               let image = CGImageSourceCreateThumbnailAtIndex(source, 0, [
                 kCGImageSourceCreateThumbnailFromImageAlways: true,
@@ -97,8 +112,7 @@ enum AttachmentPreparer {
                             size: jpeg.count, mimeType: "image/jpeg", width: image.width, height: image.height)
     }
 
-    private static func prepareText(_ url: URL, name: String, mimeType: String?) throws -> PreparedFile {
-        let data = try readBoundedFile(url, maximum: maximumFileBytes)
+    private static func prepareText(_ data: Data, name: String, mimeType: String?) throws -> PreparedFile {
         guard !data.isEmpty, data.count <= maximumFileBytes,
               !data.prefix(8192).contains(0),
               String(data: data, encoding: .utf8) != nil else { throw AttachmentError.unsupported }

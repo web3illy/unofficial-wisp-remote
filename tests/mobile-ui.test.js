@@ -962,3 +962,187 @@ test('send feedback waits for acceptance and distinguishes failed, unknown and s
     assert.deepEqual(h.posts.map(p => p.event), expected, outcome);
   }
 });
+
+function dropHarness() {
+  const h = harness();
+  h.run(`
+    state.bootstrap={connection:{state:'connected'},capabilities:{attachments:true},sessions:[]};
+    state.bootstrapValid=true;state.loading=false;state.draftActive=true;state.draftId=uuid();
+    for(const id of ['project-dialog','rename-dialog','remove-project-dialog','remove-session-dialog','settings-dialog','account-settings-dialog','feature-dialog']) $('#'+id).hidden=true;
+  `);
+  return h;
+}
+
+function fileDrop(files, extra = {}) {
+  return { dataTransfer: { types: ['Files'], files, items: [], ...extra },
+    prevented: false, preventDefault() { this.prevented = true; } };
+}
+function droppedFile(name = 'contract.pdf', type = 'application/pdf') {
+  const bytes = Uint8Array.from([37,80,68,70,45,49,46,55]);
+  return { name, type, size: bytes.length, arrayBuffer: async () => bytes.buffer };
+}
+function preparedPDF() {
+  const text = 'Synthetic contract: approval is still required.';
+  return { ok: true, body: { files: [{kind:'pdf_text',filename:'contract.pdf',size:text.length,mimeType:'text/plain',dataBase64:btoa(text)}] } };
+}
+
+test('native PDF drop imports an opaque batch and queues in the draft without sending', async () => {
+  const h = dropHarness(), packets = [];
+  h.context.window.webkit.messageHandlers.wisp.postMessage = async packet => { packets.push(packet); return preparedPDF(); };
+  await h.run(`window.wispImportDrop('drop-id',state.draftId)`);
+  assert.deepEqual(packets.map(p=>p.kind), ['takeDroppedFiles']);
+  assert.equal(packets[0].id, 'drop-id');
+  assert.deepEqual(Object.keys(packets[0]).sort(), ['id','kind']);
+  assert.equal(h.run('state.attachments.length'), 1);
+  assert.equal(h.run('state.attachments[0].local'), true);
+  assert.equal(h.run('state.attachments[0].kind'), 'pdf_text');
+  assert.equal(h.run('state.uploading'), false);
+  assert.equal(h.element('attachment-chips').hidden, false);
+  assert.equal(h.element('send').disabled, false);
+});
+
+test('file drag uses copy only when attachments are available; text drags are left alone', async () => {
+  const h = dropHarness();
+  for (const blocked of [false, true]) {
+    h.run(`state.working=${blocked}`);
+    const event = fileDrop([]);
+    h.documentEvents.get('dragover')(event);
+    assert.equal(event.prevented, true);
+    assert.equal(event.dataTransfer.dropEffect, blocked ? 'none' : 'copy');
+  }
+  const text = fileDrop([], {types:['text/plain']});
+  h.documentEvents.get('dragover')(text);
+  await h.documentEvents.get('drop')(text);
+  assert.equal(text.prevented, false);
+  assert.equal(h.posts.length, 0);
+});
+
+test('drop respects connection, capability, running, modal and pending-delivery gates', async () => {
+  for (const setup of [
+    `state.bootstrap.connection.state='offline'`, `state.bootstrap.capabilities.attachments=false`,
+    `state.view={run:{state:'running'}}`, `state.pendingUnknown=true`, `state.creationUnknown=true`,
+    `state.loading=true`, `app.dataset.drawer='open'`, `$('#settings-dialog').hidden=false`,
+    `$('#account-settings-dialog').hidden=false`, `state.uploading=true`,
+  ]) {
+    const h = dropHarness(); h.run(setup);
+    const event = fileDrop([droppedFile()]);
+    await h.documentEvents.get('drop')(event);
+    assert.equal(event.prevented, true, setup);
+    assert.equal(h.run('state.attachments.length'), 0, setup);
+    assert.equal(h.posts.length, 0, setup);
+  }
+});
+
+test('drop rejects oversized/count/empty/folder inputs before reading or bridging them', async () => {
+  for (const makeEvent of [
+    () => fileDrop(Array.from({length:11}, () => droppedFile())),
+    () => fileDrop([{...droppedFile('note.txt','text/plain'),size:25*1024*1024+1,arrayBuffer(){throw Error('must not read')}}]),
+    () => fileDrop([{...droppedFile('note.txt','text/plain'),size:0}]),
+    () => fileDrop([]),
+    () => fileDrop([droppedFile()], {items:[{kind:'file',webkitGetAsEntry:()=>({isDirectory:true})}]}),
+  ]) {
+    const h = dropHarness(); await h.documentEvents.get('drop')(makeEvent());
+    assert.equal(h.posts.length, 0);
+    assert.equal(h.run('state.attachments.length'), 0);
+    assert.equal(h.run('state.uploading'), false);
+    assert.equal(h.element('notice').hidden, false);
+  }
+});
+
+test('drop preparation locks navigation and a second drop; late results cannot land in another chat', async () => {
+  const h = dropHarness(); let release;
+  h.context.window.webkit.messageHandlers.wisp.postMessage = () => new Promise(resolve => { release=resolve; });
+  const pending = h.run(`window.wispImportDrop('drop-id',state.draftId)`);
+  await Promise.resolve(); await Promise.resolve();
+  assert.equal(h.run('state.uploading'), true);
+  assert.equal(h.element('send').disabled, true);
+  await h.run(`selectSession('another-chat')`);
+  assert.equal(h.run('state.selectedId'), null);
+  await h.documentEvents.get('drop')(fileDrop([droppedFile()]));
+  h.run(`state.draftId=uuid()`); // A reset outside ordinary navigation must also be safe.
+  release(preparedPDF()); await pending;
+  assert.equal(h.run('state.attachments.length'), 0);
+  assert.equal(h.run('state.uploading'), false);
+});
+
+test('a failed file in a batch and total-size violations never append a partial batch', async () => {
+  const h = dropHarness();
+  h.context.window.webkit.messageHandlers.wisp.postMessage = async () => ({ok:false,error:{code:'attachment_unsupported'}});
+  await h.run(`window.wispImportDrop('drop-id',state.draftId)`);
+  assert.equal(h.run('state.attachments.length'), 0);
+  assert.match(h.element('notice').textContent, /readable PDF/);
+  h.run(`state.attachments=[{size:15*1024*1024}];`);
+  h.context.window.webkit.messageHandlers.wisp.postMessage = async () => preparedPDF();
+  await h.run(`window.wispImportDrop('drop-id',state.draftId)`);
+  assert.equal(h.run('state.attachments.length'), 1);
+  assert.match(h.element('notice').textContent, /15 MB/);
+  assert.equal(h.run('state.uploading'), false);
+});
+
+test('drop into an existing chat uses bounded upload routes and never submits a message', async () => {
+  const h = dropHarness(), routes=[];
+  h.run(`state.draftActive=false;state.selectedId='existing-chat';state.streamAcknowledged=true;state.streamSnapshot=true;state.lastStreamEvent=Date.now();`);
+  h.context.window.webkit.messageHandlers.wisp.postMessage = async packet => {
+    if(packet.kind === 'takeDroppedFiles') return preparedPDF();
+    routes.push({path:packet.path,body:packet.body});
+    return {ok:true,body:packet.path.endsWith('/commit') ? {id:'attachment-id',filename:'contract.pdf',kind:'pdf_text',size:45} : {id:'attachment-id'}};
+  };
+  await h.run(`window.wispImportDrop('drop-id',state.selectedId)`);
+  assert.deepEqual(routes.map(r=>r.path),['/bridge/attachments/begin','/bridge/attachments/chunk','/bridge/attachments/commit']);
+  assert.equal(routes[0].body.sessionId,'existing-chat');
+  assert.equal(h.run('state.attachments[0].id'),'attachment-id');
+});
+
+test('browser PDF drops explain the native requirement and file-read failure allows retry', async () => {
+  const h = dropHarness(); h.context.window.webkit = undefined;
+  await h.documentEvents.get('drop')(fileDrop([droppedFile()]));
+  assert.match(h.element('notice').textContent, /iPhone app/);
+  assert.equal(h.run('state.uploading'), false);
+  await h.documentEvents.get('drop')(fileDrop([{...droppedFile('note.txt','text/plain'),arrayBuffer:async()=>{throw Error('File unavailable');}}]));
+  assert.match(h.element('notice').textContent, /File unavailable/);
+  assert.equal(h.element('attach').disabled, false);
+});
+
+test('picker retains a selected draft attachment across a transient disconnect and blocks concurrent drop', async () => {
+  const h=dropHarness(); let release; const packets=[];
+  h.context.window.webkit.messageHandlers.wisp.postMessage=packet=>{packets.push(packet);return new Promise(resolve=>{release=resolve});};
+  const pending=h.run('chooseAttachments()');
+  assert.equal(h.run('state.uploading'),true);
+  await h.run(`window.wispImportDrop('concurrent-drop',state.draftId)`);
+  h.run('state.bootstrapValid=false');
+  release(preparedPDF()); await pending;
+  assert.deepEqual(packets.map(p=>p.kind),['pickFiles']);
+  assert.equal(h.run('state.attachments.length'),1);
+  assert.equal(h.run('state.attachments[0].local'),true);
+  assert.equal(h.run('state.uploading'),false);
+});
+
+test('picker cancellation clears preparation state and native drops reject an obsolete destination', async () => {
+  const h=dropHarness();
+  h.context.window.webkit.messageHandlers.wisp.postMessage=async()=>({ok:true,body:{files:[]}});
+  await h.run('chooseAttachments()');
+  assert.equal(h.run('state.uploading'),false);
+  assert.equal(h.element('notice').hidden,true);
+  await h.run(`window.wispImportDrop('drop-id','old-draft')`);
+  assert.equal(h.run('state.attachments.length'),0);
+});
+
+test('native drop availability reports destination and disables while importing', async () => {
+  const h=dropHarness(); const states=[];
+  h.run('window.wispNativeFileDrop=true');
+  h.context.window.webkit.messageHandlers.wisp.postMessage=async packet=>{if(packet.kind==='fileDropState'){states.push(packet);return{ok:true};}return preparedPDF();};
+  h.run('updateControls()');
+  await h.run(`window.wispImportDrop('drop-id',state.draftId)`);
+  assert.deepEqual(states.map(s=>s.enabled),[true,false,true]);
+  assert.ok(states.every(s=>s.selectionId===h.run('state.draftId')));
+});
+
+test('native copy proposal is disabled while a modal or drawer covers the composer', () => {
+  const h=dropHarness(), states=[];
+  h.run('window.wispNativeFileDrop=true');
+  h.context.window.webkit.messageHandlers.wisp.postMessage=async packet=>{if(packet.kind==='fileDropState')states.push(packet.enabled);return{ok:true};};
+  h.run(`updateControls(); $('#settings-dialog').hidden=false; syncOverlayAccess(); updateControls();`);
+  assert.deepEqual(states,[true,false]);
+  h.run(`$('#settings-dialog').hidden=true; syncOverlayAccess(); openDrawer(true); openDrawer(false);`);
+  assert.deepEqual(states,[true,false,true,false,true]);
+});

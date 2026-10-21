@@ -26,5 +26,12 @@ let package = Package(
             path: "Sources/RemoteProbe"
         ),
         .testTarget(name: "RemoteCoreTests", dependencies: ["RemoteCore"]),
+        .target(
+            name: "AttachmentImport",
+            path: "App",
+            exclude: ["Info.plist", "QRScannerView.swift", "RemoteWebView.swift", "RootView.swift", "WispRemoteApp.swift"],
+            sources: ["AttachmentPreparer.swift", "DroppedFileBatch.swift"]
+        ),
+        .testTarget(name: "AttachmentImportTests", dependencies: ["AttachmentImport"]),
     ]
 )

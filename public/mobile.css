@@ -180,6 +180,7 @@ svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width:
 .notice { max-width: 720px; margin: 0 auto 8px; padding: 10px 12px; border: 1px solid var(--border-button); border-radius: 12px; background: var(--bg-panel); color: var(--text-primary-sub); font-size: 12px; line-height: 1.5; }
 .notice.error { color: var(--error); }
 .composer { max-width: 720px; margin: 0 auto; overflow: visible; }
+.composer.file-drop-active .input-shell { outline: 2px solid var(--text-primary); outline-offset: 3px; }
 .composer-tabs { display: flex; height: 36px; padding: 0 16px; align-items: center; }
 .private-tab { display: inline-flex; align-items: center; gap: 8px; color: var(--text-primary); font-size: 14px; }
 .input-shell { position: relative; display: flex; flex-direction: column; min-height: 56px; padding: 16px 16px 16px 48px; border: 1px solid var(--border-input); border-radius: 24px; background: var(--bg-input); }

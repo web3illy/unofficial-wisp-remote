@@ -6,6 +6,29 @@ import RemoteCore
 @MainActor
 private final class AccessoryFreeWebView: WKWebView {
     override var inputAccessoryView: UIView? { nil }
+
+    private var fileDrop: UIDropInteraction?
+
+    func enableFileDrop(delegate: UIDropInteractionDelegate) {
+        let interaction = UIDropInteraction(delegate: delegate)
+        fileDrop = interaction
+        addInteraction(interaction)
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        guard let fileDrop else { return }
+        // WebKit's descendant drop interactions turn Files items into unreadable
+        // File URLs under our custom scheme. Route drops to the native importer.
+        // Use public UIView/UIDropInteraction APIs, without private class names.
+        func removeWebDrops(_ view: UIView) {
+            for interaction in view.interactions where interaction is UIDropInteraction && interaction !== fileDrop {
+                view.removeInteraction(interaction)
+            }
+            for child in view.subviews { removeWebDrops(child) }
+        }
+        removeWebDrops(self)
+    }
 }
 
 struct RemoteWebView: UIViewRepresentable {
@@ -30,8 +53,10 @@ struct RemoteWebView: UIViewRepresentable {
         configuration.defaultWebpagePreferences.allowsContentJavaScript = true
         configuration.setURLSchemeHandler(context.coordinator.resources, forURLScheme: BundleSchemeHandler.scheme)
         configuration.userContentController.addScriptMessageHandler(context.coordinator.bridge, contentWorld: .page, name: "wisp")
+        configuration.userContentController.addUserScript(WKUserScript(source: "window.wispNativeFileDrop = true;", injectionTime: .atDocumentStart, forMainFrameOnly: true))
 
         let webView = AccessoryFreeWebView(frame: .zero, configuration: configuration)
+        webView.enableFileDrop(delegate: context.coordinator.bridge)
         webView.allowsLinkPreview = false
         webView.isOpaque = false
         webView.backgroundColor = .clear
@@ -181,7 +206,7 @@ final class BundleSchemeHandler: NSObject, WKURLSchemeHandler {
 }
 
 @MainActor
-final class WebBridge: NSObject, WKScriptMessageHandlerWithReply, WKNavigationDelegate, WKUIDelegate, UIDocumentPickerDelegate {
+final class WebBridge: NSObject, WKScriptMessageHandlerWithReply, WKNavigationDelegate, WKUIDelegate, UIDocumentPickerDelegate, UIDropInteractionDelegate {
     weak var webView: WKWebView?
     private let client: RemoteClient
     private let haptics = SystemHapticsController()
@@ -190,6 +215,11 @@ final class WebBridge: NSObject, WKScriptMessageHandlerWithReply, WKNavigationDe
     private var subscriptions: [String: Task<Void, Never>] = [:]
     private var pendingOperations: [UUID: Task<Void, Never>] = [:]
     private var pickerContinuation: CheckedContinuation<[URL], Never>?
+    private var preparingAttachment = false
+    private var fileDropEnabled = false
+    private var fileDropSelection: String?
+    private var droppedFiles: (id: String, batch: DroppedFileBatch, taken: Bool)?
+    private var dropTask: Task<Void, Never>?
     private var deliveredResumeGeneration: UInt64 = 0
     private var isActive = true
     private var lifecycleGeneration: UInt64 = 0
@@ -214,6 +244,10 @@ final class WebBridge: NSObject, WKScriptMessageHandlerWithReply, WKNavigationDe
         guard isActive else { return }
         isActive = false
         lifecycleGeneration &+= 1
+        dropTask?.cancel()
+        dropTask = nil
+        droppedFiles?.batch.cancel()
+        droppedFiles = nil
         subscriptions.values.forEach { $0.cancel() }
         subscriptions.removeAll()
         pendingOperations.values.forEach { $0.cancel() }
@@ -387,6 +421,9 @@ final class WebBridge: NSObject, WKScriptMessageHandlerWithReply, WKNavigationDe
                   let sessionId = body["sessionId"] as? String, UUID(uuidString: sessionId) != nil else {
                 throw RemoteError.invalidRequest
             }
+            guard !preparingAttachment else { return Self.failure(code: "attachment_busy", status: 409) }
+            preparingAttachment = true
+            defer { preparingAttachment = false }
             let urls = await pickFiles()
             if urls.isEmpty { return ["ok": true, "status": 200, "body": ["files": []]] }
             let files: [PreparedFile]
@@ -394,6 +431,30 @@ final class WebBridge: NSObject, WKScriptMessageHandlerWithReply, WKNavigationDe
             catch AttachmentError.limit { return Self.failure(code: "attachment_limit", status: 413) }
             catch { return Self.failure(code: "attachment_unsupported", status: 415) }
             return ["ok": true, "status": 200, "body": ["files": files.map(\.dictionary)]]
+
+        case "fileDropState":
+            guard Set(body.keys) == Set(["kind", "enabled", "selectionId"]),
+                  let enabled = body["enabled"] as? Bool,
+                  let rawEnabled = body["enabled"] as? NSNumber,
+                  CFGetTypeID(rawEnabled) == CFBooleanGetTypeID(),
+                  body["selectionId"] is NSNull || (body["selectionId"] as? String).flatMap(UUID.init(uuidString:)) != nil else {
+                throw RemoteError.invalidRequest
+            }
+            fileDropSelection = body["selectionId"] as? String
+            fileDropEnabled = enabled && fileDropSelection != nil
+            return ["ok": true, "status": 200, "body": ["accepted": true]]
+
+        case "takeDroppedFiles":
+            guard Set(body.keys) == Set(["kind", "id"]),
+                  let id = body["id"] as? String, let pending = droppedFiles, id == pending.id, !pending.taken else {
+                throw RemoteError.invalidRequest
+            }
+            droppedFiles = (pending.id, pending.batch, true) // Single consumer; no arbitrary files or replay.
+            do {
+                let files = try await pending.batch.files()
+                return ["ok": true, "status": 200, "body": ["files": files.map(\.dictionary)]]
+            } catch AttachmentError.limit { return Self.failure(code: "attachment_limit", status: 413) }
+            catch { return Self.failure(code: "attachment_unsupported", status: 415) }
 
         default:
             throw RemoteError.invalidRequest
@@ -408,6 +469,42 @@ final class WebBridge: NSObject, WKScriptMessageHandlerWithReply, WKNavigationDe
             picker.allowsMultipleSelection = true
             picker.delegate = self
             presenter.present(picker, animated: true)
+        }
+    }
+
+    func dropInteraction(_ interaction: UIDropInteraction, canHandle session: UIDropSession) -> Bool {
+        isActive && fileDropEnabled && !preparingAttachment && dropTask == nil &&
+            !session.items.isEmpty && session.items.count <= AttachmentPreparer.maximumCount &&
+            session.items.allSatisfy { DroppedFileBatch.contentType(for: $0.itemProvider) != nil }
+    }
+
+    func dropInteraction(_ interaction: UIDropInteraction, sessionDidUpdate session: UIDropSession) -> UIDropProposal {
+        UIDropProposal(operation: dropInteraction(interaction, canHandle: session) ? .copy : .cancel)
+    }
+
+    func dropInteraction(_ interaction: UIDropInteraction, performDrop session: UIDropSession) {
+        guard dropInteraction(interaction, canHandle: session), let webView, let selection = fileDropSelection else { return }
+        // Start loading within performDrop, not later in an async task.
+        let batch = DroppedFileBatch(providers: session.items.map(\.itemProvider))
+        let id = UUID().uuidString
+        droppedFiles = (id, batch, false)
+        preparingAttachment = true
+        haptics.handle(.light)
+        dropTask = Task { @MainActor [weak self] in
+            let timeout = Task {
+                do { try await Task.sleep(for: .seconds(60)); batch.cancel() } catch { }
+            }
+            defer {
+                timeout.cancel()
+                batch.cancel()
+                self?.droppedFiles = nil
+                self?.preparingAttachment = false
+                self?.dropTask = nil
+            }
+            _ = try? await webView.callAsyncJavaScript(
+                "await window.wispImportDrop(id, selectionId)",
+                arguments: ["id": id, "selectionId": selection], in: nil, contentWorld: .page
+            )
         }
     }
 

@@ -1,6 +1,6 @@
 {
   "name": "unofficial-wisp-remote",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "private": true,
   "type": "module",
   "description": "Unofficial iPhone companion for Wisp on Mac, connected over encrypted iroh transport",

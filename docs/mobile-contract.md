@@ -64,6 +64,12 @@ New Chat opens an in-memory draft without a create request. First send serialize
 
 User-initiated icon Copy sends exactly `{kind:"copyText",text:string}` to the native main-frame bridge (UTF-8 at most 1,048,576 bytes), which writes the general pasteboard and returns `{ok:true,status:200,body:{copied:true}}`. Browser preview uses the Clipboard API. No clipboard read or automatic copy occurs. The native picker accepts the local draft UUID as its selection correlation ID; this does not create a Runtime session or relax upload authorization.
 
+On iPhone, a native `UIDropInteraction` loads file representations directly from `NSItemProvider`, bypassing WebKit File URLs (which can fail to read under the private URL scheme). Provider loads start during `performDrop`; temporary URLs are consumed within their completion callbacks. A serial queue prepares each file through the same PDFKit/ImageIO/UTF-8 pipeline as the picker, enforcing 25 MiB source size, 5 MiB prepared file, 15 MiB batch and 10-file limits. The app does not copy the provider files into persistent storage.
+
+The bundled main frame reports exactly `{kind:"fileDropState",enabled:boolean,selectionId:UUID|null}` so iOS can offer Copy only for an available destination. At drop, iOS captures the destination and creates a private single-use batch ID. `window.wispImportDrop(id,selectionId)` checks the destination and locks the composer before requesting exactly `{kind:"takeDroppedFiles",id:UUID}`. The bridge accepts only that pending batch, returning `{ok:true,status:200,body:{files:[PreparedFile]}}` or a normalized attachment error. No paths, URLs or raw source bytes are accepted from JavaScript. Native loads are cancelled on teardown or after 60 seconds. Picker and drop preparation are mutually exclusive.
+
+Drop acceptance uses the same connection, capability and busy-state gates as the attachment button. Native provider data never enters the textarea. Browser-preview file drags use `DataTransfer.files` captured synchronously during `drop`, preventing navigation/default text insertion. Preparation locks the composer and binds results to the selected chat/draft. A changed destination discards late results. Drops never send a message or create a chat; new-chat attachments remain in memory until Send. Browser preview retains text/image support and explains that PDFs require the iPhone app. Unavailable destinations and unsupported provider types reject the drop. Failed preparations show a recoverable attachment error.
+
 
 ## iPhone tactile feedback (2026-10-17)
 
