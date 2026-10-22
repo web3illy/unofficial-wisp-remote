@@ -3,7 +3,7 @@
 Use Wisp on your Mac from your iPhone. Continue conversations, send files and
 respond to agent approval requests while your Mac does the work.
 
-An independent companion by [web3illy](https://github.com/web3illy). Requires
+An independent companion by [web3illy](https://x.com/web3illy). Requires
 [Wisp](https://usewisp.io/) running on your own Mac. This is experimental software,
 not an official Wisp app.
 
