@@ -25,8 +25,6 @@ installed Wisp. Before building the iPhone app, it populates the generated, untr
 its private `wisp-local` URL scheme. The privileged WebView cannot navigate to a
 remote page.
 
-The lower-level Swift commands below run from the `native/` directory:
-
 `swift test --filter AttachmentPreparerTests` runs synthetic PDF, image and text
 import regressions on macOS, including malformed input and size limits. These
 tests exercise the same preparation source compiled into the iPhone app.
@@ -36,6 +34,8 @@ drag a downloaded PDF from Files into a connected chat: its attachment chip shou
 appear without sending a message. Repeat during a busy/disconnected state; a drop
 must not navigate away or attach to another chat. Browser preview supports dropped
 text/images; PDF text extraction requires the native app.
+
+The lower-level Swift commands below run from the `native/` directory:
 
 ```sh
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer swift test --disable-sandbox
